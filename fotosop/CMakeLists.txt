@@ -11,7 +11,11 @@ project(fotosop LANGUAGES CUDA CXX)
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
-add_executable(fotosop src/lib/cvui.cu main.cu src/converter/grayscale.cu src/loader/image.cu)
+add_executable(fotosop
+        lib/cvui.cuh
+        src/converter.cu
+        src/loader.cu
+        main.cu)
 
 target_link_libraries(fotosop ${OpenCV_LIBS})
 
@@ -19,3 +23,9 @@ set_target_properties(fotosop PROPERTIES CUDA_ARCHITECTURES "75")
 
 set_target_properties(fotosop PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON)
+
+set_source_files_properties(
+        ${lib/cvui.cuh}
+        PROPERTIES
+        COMPILE_FLAGS "-w"
+)
