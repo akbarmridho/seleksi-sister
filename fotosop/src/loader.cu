@@ -20,8 +20,8 @@ size_t load_image(rgb_image_t *dest, const std::string &input_file, int *height,
     auto rgb_image = (uint8_t *) img_data.data;
 
     // populate host rgb data array
-    for (int i = 0; i < *height * *width * 3; i++) {
-        *dest[i] = rgb_image[i];
+    for (int i = 0; i < *height * *width * CHANNELS; i++) {
+        (*dest)[i] = rgb_image[i];
     }
 
     return *width * *height;

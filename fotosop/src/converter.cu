@@ -1,8 +1,8 @@
 #include "converter.cuh"
 
 __global__ void kernel_to_grey(crgb_image_t source, gray_image_t result, int height, int width) {
-    unsigned int x = threadIdx.x + blockIdx.x + blockDim.x;
-    unsigned int y = threadIdx.y + blockIdx.y + blockDim.y;
+    unsigned int x = threadIdx.x + blockIdx.x * blockDim.x;
+    unsigned int y = threadIdx.y + blockIdx.y * blockDim.y;
 
     if (x < width && y < height) {
         unsigned int grey_offset = y * width + x;
