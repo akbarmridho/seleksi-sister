@@ -1,4 +1,4 @@
-#include "loader.cuh"
+#include "loader.h"
 #include <opencv2/highgui/highgui.hpp>
 #include <iostream>
 

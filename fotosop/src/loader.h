@@ -1,7 +1,7 @@
 #ifndef LOADER_H
 #define LOADER_H
 
-#include "datatypes.cuh"
+#include "datatypes.h"
 #include <string>
 #include <opencv2/core.hpp>
 
