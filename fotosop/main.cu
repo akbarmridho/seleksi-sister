@@ -1,11 +1,9 @@
 #include <iostream>
-#include <filesystem>
 #include "src/loader.h"
 #include "src/converter.cuh"
 
 #define CVUI_IMPLEMENTATION
 #define WINDOW_NAME "Fotosop"
-#define WINDOR_IMAGE "Image"
 
 #include "lib/cvui.h"
 #include "lib/osdialog.h"
@@ -15,33 +13,20 @@ using std::cout;
 using std::endl;
 using std::string;
 
-cv::Mat resize(const cv::Mat &source, int width, int height) {
-    int original_width = source.cols;
-    int original_height = source.rows;
-
-    float ratio = MIN(height / (1.0 * original_height), width / (1.0 * original_width));
-
-    cv::Mat result;
-    cv::resize(source, result, cv::Size(int(original_width * ratio), int(original_height * ratio)), cv::INTER_CUBIC);
-    return result;
+inline bool ends_with(std::string const &value, std::string const &ending) {
+    if (ending.size() > value.size()) return false;
+    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
 
 int main() {
-    /**
-     * height 540
-width 960
-container
-
-padding tombol jadi width 1100
-     */
-    cv::Mat main_frame = cv::Mat(540, 1100, CV_8UC3);
+    cv::Mat main_frame = cv::Mat(540, 1200, CV_8UC3);
 
     cv::Mat loaded_image;
     string loaded_path;
 
     cv::Mat result;
     cv::Mat result_resized;
-    bool result_drawn = false;
+    bool has_resized_result = false;
 
     cv::namedWindow(WINDOW_NAME);
     cvui::init(WINDOW_NAME);
@@ -71,6 +56,23 @@ padding tombol jadi width 1100
             }
         }
 
+        if (cvui::button(main_frame, 970, 60, "Save File") && !result.empty()) {
+            auto filters = osdialog_filters_parse("Image:jpg,jpeg,png");
+            char *image_path_chr = osdialog_file(OSDIALOG_SAVE, nullptr, nullptr, filters);
+            osdialog_filters_free(filters);
+
+            if (image_path_chr != nullptr) {
+                string image_path(image_path_chr);
+                if (!ends_with(image_path, ".jpg") && !ends_with(image_path, ".jpeg") &&
+                    !ends_with(image_path, ".png")) {
+                    image_path += ".jpg";
+                }
+
+                if (!image_path.empty()) {
+                    cv::imwrite(image_path, result);
+                }
+            }
+        }
 
         // TODO or applied filter is different
         if (result.empty()) {
@@ -83,15 +85,15 @@ padding tombol jadi width 1100
             result = cv::Mat(height, width, CV_8UC3);
             std::memcpy(result.data, rgb_image, total_pixels * sizeof(uint8_t) * CHANNELS);
             free(rgb_image);
-            result_drawn = false;
+            has_resized_result = false;
         }
 
         if (result.empty()) {
             cvui::printf(main_frame, 360, 250, 0.8, 0xffffff, "No image loaded");
         } else {
-            if (!result_drawn) {
+            if (!has_resized_result) {
                 result_resized = resize(result, 960, 540);
-                result_drawn = true;
+                has_resized_result = true;
             }
             cvui::image(main_frame, 0, 0, result_resized);
         }
@@ -107,17 +109,6 @@ padding tombol jadi width 1100
         }
     }
 
-//    cout << "Hello!" << endl;
-//    cout << "current path" << std::filesystem::current_path() << endl;
-//
-//    string input_file;
-//    string output_file;
-//
-//    cout << "Image source: " << endl;
-//    cin >> input_file;
-//    cout << "Image dest: " << endl;
-//    cin >> output_file;
-//
 //    // host - cpu
 //    // device - gpu
 //

@@ -7,6 +7,6 @@
 
 size_t load_image(rgb_image_t *dest, const cv::Mat &img_data, int *height, int *width);
 
-void save_image(const std::string &output_file, uint8_t *result, int height, int width, int type = CV_8UC3);
+cv::Mat resize(const cv::Mat &source, int width, int height);
 
 #endif
