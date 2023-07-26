@@ -2,16 +2,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <iostream>
 
-size_t load_image(rgb_image_t *dest, const std::string &input_file, int *height, int *width) {
-    cv::Mat img_data;
-
-    // read image data
-    img_data = cv::imread(input_file, cv::IMREAD_COLOR);
-
-    if (img_data.empty()) {
-        std::cerr << "Unable to laod image file: " << input_file << std::endl;
-    }
-
+size_t load_image(rgb_image_t *dest, const cv::Mat &img_data, int *height, int *width) {
     *height = img_data.rows;
     *width = img_data.cols;
 
