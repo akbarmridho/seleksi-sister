@@ -8,6 +8,14 @@
 #include "lib/cvui.h"
 #include "lib/osdialog.h"
 
+/**
+ * Change contrast value range to [-255, 255] or saturation to [-1,1] if you like
+ */
+#define CONTRAST_MAX 50
+#define CONTRAST_MIN (-50)
+#define SATURATION_MAX 1.0
+#define SATURATION_MIN (-1.0)
+
 using std::cin;
 using std::cout;
 using std::endl;
@@ -80,10 +88,11 @@ int main() {
         }
 
         cvui::printf(main_frame, 970, 100, 0.4, 0xffffff, "Contrast");
-        cvui::trackbar(main_frame, 970, 125, 250, &contrast_value, -255, 255, 1, "%.1Lf", cvui::TRACKBAR_DISCRETE);
+        cvui::trackbar(main_frame, 970, 125, 250, &contrast_value, CONTRAST_MIN, CONTRAST_MAX, 1, "%.1Lf",
+                       cvui::TRACKBAR_DISCRETE);
 
         cvui::printf(main_frame, 970, 180, 0.4, 0xffffff, "Saturation");
-        cvui::trackbar(main_frame, 970, 205, 250, &saturation_value, (float) -1.0, (float) 1.0);
+        cvui::trackbar(main_frame, 970, 205, 250, &saturation_value, (float) SATURATION_MIN, (float) SATURATION_MAX);
 
 
         // TODO or applied filter is different
@@ -103,13 +112,9 @@ int main() {
             cudaMalloc(&d_rgb_image, sizeof(uint8_t) * total_pixels * CHANNELS);
             cudaMemcpy(d_rgb_image, rgb_image, sizeof(uint8_t) * total_pixels * CHANNELS, cudaMemcpyHostToDevice);
 
-            if (contrast_value != 0) {
-                add_contrast(d_rgb_image, height, width, contrast_value);
-            }
+            add_contrast(d_rgb_image, height, width, contrast_value);
 
-            if (saturation_value != 0.0) {
-                add_saturation(d_rgb_image, height, width, saturation_value);
-            }
+            add_saturation(d_rgb_image, height, width, saturation_value);
 
             cudaMemcpy(rgb_image, d_rgb_image, sizeof(uint8_t) * total_pixels * CHANNELS, cudaMemcpyDeviceToHost);
 

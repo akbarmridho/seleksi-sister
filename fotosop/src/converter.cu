@@ -74,7 +74,7 @@ __device__ rgb_t hsl_to_rgb(float h, float s, float l) {
     rgb_t result;
 
     if (0 == s) {
-        result.r = result.g = result.b = l; // achromatic
+        result.r = result.g = result.b = l * 255; // achromatic
     } else {
         float q = l < 0.5 ? l * (1 + s) : l + s - l * s;
         float p = 2 * l - q;
@@ -137,7 +137,7 @@ __global__ void kernel_add_saturation(rgb_image_t image, int height, int width, 
         float b = image[rgb_offset + 2];
 
         hsl_t hsl = rgb_to_hsl(r, g, b);
-        hsl.s *= value;
+        hsl.s *= (1.0 + value);
 
         rgb_t rgb = hsl_to_rgb(hsl.h, hsl.s, hsl.l);
 
@@ -156,6 +156,10 @@ void to_grey(rgb_image_t image, int height, int width) {
 
 
 void add_contrast(rgb_image_t image, int height, int width, int value) {
+    if (value == 0) {
+        return;
+    }
+
     // contrast modifier value range [-255, 255]
     const dim3 dimGrid((int) ceil(width / 16.0), (int) ceil(height / 16.0));
     const dim3 dimBlock(16, 16);
@@ -164,6 +168,10 @@ void add_contrast(rgb_image_t image, int height, int width, int value) {
 }
 
 void add_saturation(rgb_image_t image, int height, int width, float value) {
+    if (value == 0.0) {
+        return;
+    }
+
     // contrast modifier value range [-1, 1]
     const dim3 dimGrid((int) ceil(width / 16.0), (int) ceil(height / 16.0));
     const dim3 dimBlock(16, 16);
