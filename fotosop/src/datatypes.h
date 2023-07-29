@@ -15,4 +15,11 @@ typedef struct hsl {
     float h, s, l;
 } hsl_t;
 
+enum FILTER_TYPE {
+    GRAYSCALE,
+    EDGE,
+    BLUR,
+    NONE
+};
+
 #endif

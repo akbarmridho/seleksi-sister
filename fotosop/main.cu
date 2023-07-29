@@ -41,9 +41,15 @@ int main() {
 
     int applied_contrast = 0;
     float applied_saturation = 0.0;
+    FILTER_TYPE applied_filter = NONE;
 
     int contrast_value = 0.0;
     float saturation_value = 0.0;
+
+    bool grayscale_filter_checked = false;
+    bool edge_filter_checked = false;
+    bool blur_filter_checked = false;
+    FILTER_TYPE current_filter = NONE;
 
     while (true) {
         // Fill background color
@@ -94,12 +100,28 @@ int main() {
         cvui::printf(main_frame, 970, 180, 0.4, 0xffffff, "Saturation");
         cvui::trackbar(main_frame, 970, 205, 250, &saturation_value, (float) SATURATION_MIN, (float) SATURATION_MAX);
 
+        cvui::checkbox(main_frame, 970, 290, "Edge", &edge_filter_checked);
+        cvui::checkbox(main_frame, 970, 320, "Blur", &blur_filter_checked);
+        cvui::checkbox(main_frame, 970, 260, "Grayscale", &grayscale_filter_checked);
+
+        cvui::printf(main_frame, 970, 350, 0.4, 0xffffff, "Pilihan paling atas akan diprioritaskan.");
+
+        if (edge_filter_checked) {
+            current_filter = EDGE;
+        } else if (blur_filter_checked) {
+            current_filter = BLUR;
+        } else if (grayscale_filter_checked) {
+            current_filter = GRAYSCALE;
+        } else {
+            current_filter = NONE;
+        }
 
         // TODO or applied filter is different
         if (!loaded_image.empty() && (
                 result.empty() ||
                 applied_contrast != contrast_value ||
-                applied_saturation != saturation_value
+                applied_saturation != saturation_value ||
+                current_filter != applied_filter
         )) {
             rgb_image_t rgb_image;
             int height, width;
@@ -116,6 +138,10 @@ int main() {
 
             add_saturation(d_rgb_image, height, width, saturation_value);
 
+            if (current_filter == GRAYSCALE) {
+                to_grey(d_rgb_image, height, width);
+            }
+
             cudaMemcpy(rgb_image, d_rgb_image, sizeof(uint8_t) * total_pixels * CHANNELS, cudaMemcpyDeviceToHost);
 
             result = cv::Mat(height, width, CV_8UC3);
@@ -126,6 +152,7 @@ int main() {
             has_resized_result = false;
             applied_saturation = saturation_value;
             applied_contrast = contrast_value;
+            applied_filter = current_filter;
         }
 
         if (result.empty()) {
