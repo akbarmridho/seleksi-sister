@@ -88,7 +88,7 @@ __device__ rgb_t hsl_to_rgb(float h, float s, float l) {
 }
 
 
-__global__ void kernel_to_grey(crgb_image_t source, gray_image_t result, int height, int width) {
+__global__ void kernel_to_grey(rgb_image_t image, int height, int width) {
     unsigned int x = threadIdx.x + blockIdx.x * blockDim.x;
     unsigned int y = threadIdx.y + blockIdx.y * blockDim.y;
 
@@ -96,15 +96,20 @@ __global__ void kernel_to_grey(crgb_image_t source, gray_image_t result, int hei
         unsigned int grey_offset = y * width + x;
         unsigned int rgb_offset = grey_offset * CHANNELS;
 
-        uint16_t r = source[rgb_offset + 0];
-        uint16_t g = source[rgb_offset + 1];
-        uint16_t b = source[rgb_offset + 2];
+        uint16_t r = image[rgb_offset + 0];
+        uint16_t g = image[rgb_offset + 1];
+        uint16_t b = image[rgb_offset + 2];
 
-        result[grey_offset] = (uint8_t) ((r + g + b) / 3);
+        auto value = (uint8_t) ((r + g + b) / 3);
+
+        image[rgb_offset + 0] = value;
+        image[rgb_offset + 1] = value;
+        image[rgb_offset + 2] = value;
+
     }
 }
 
-__global__ void kernel_add_contrast(crgb_image_t source, rgb_image_t result, int height, int width, int value) {
+__global__ void kernel_add_contrast(rgb_image_t image, int height, int width, int value) {
     unsigned int x = threadIdx.x + blockIdx.x * blockDim.x;
     unsigned int y = threadIdx.y + blockIdx.y * blockDim.y;
 
@@ -113,13 +118,13 @@ __global__ void kernel_add_contrast(crgb_image_t source, rgb_image_t result, int
         unsigned int rgb_offset = pixel_offset * CHANNELS;
 
         for (int i = 0; i < 3; i++) {
-            uint16_t c = source[rgb_offset + i];
-            result[rgb_offset + i] = max(0, min(255, value * (c - 128) + 128));
+            uint16_t c = image[rgb_offset + i];
+            image[rgb_offset + i] = max(0, min(255, value * (c - 128) + 128));
         }
     }
 }
 
-__global__ void kernel_add_saturation(crgb_image_t source, rgb_image_t result, int height, int width, float value) {
+__global__ void kernel_add_saturation(rgb_image_t image, int height, int width, float value) {
     unsigned int x = threadIdx.x + blockIdx.x * blockDim.x;
     unsigned int y = threadIdx.y + blockIdx.y * blockDim.y;
 
@@ -127,41 +132,41 @@ __global__ void kernel_add_saturation(crgb_image_t source, rgb_image_t result, i
         unsigned int pixel_offset = y * width + x;
         unsigned int rgb_offset = pixel_offset * CHANNELS;
 
-        float r = source[rgb_offset + 0];
-        float g = source[rgb_offset + 1];
-        float b = source[rgb_offset + 2];
+        float r = image[rgb_offset + 0];
+        float g = image[rgb_offset + 1];
+        float b = image[rgb_offset + 2];
 
         hsl_t hsl = rgb_to_hsl(r, g, b);
         hsl.s *= value;
 
         rgb_t rgb = hsl_to_rgb(hsl.h, hsl.s, hsl.l);
 
-        result[rgb_offset + 0] = (uint8_t) rgb.r;
-        result[rgb_offset + 1] = (uint8_t) rgb.g;
-        result[rgb_offset + 2] = (uint8_t) rgb.b;
+        image[rgb_offset + 0] = (uint8_t) rgb.r;
+        image[rgb_offset + 1] = (uint8_t) rgb.g;
+        image[rgb_offset + 2] = (uint8_t) rgb.b;
     }
 }
 
-void to_grey(crgb_image_t source, gray_image_t result, int height, int width) {
+void to_grey(rgb_image_t image, int height, int width) {
     const dim3 dimGrid((int) ceil(width / 16.0), (int) ceil(height / 16.0));
     const dim3 dimBlock(16, 16);
 
-    kernel_to_grey<<<dimGrid, dimBlock>>>(source, result, height, width);
+    kernel_to_grey<<<dimGrid, dimBlock>>>(image, height, width);
 }
 
 
-void add_contrast(crgb_image_t source, rgb_image_t result, int height, int width, float value) {
+void add_contrast(rgb_image_t image, int height, int width, int value) {
     // contrast modifier value range [-255, 255]
     const dim3 dimGrid((int) ceil(width / 16.0), (int) ceil(height / 16.0));
     const dim3 dimBlock(16, 16);
 
-    kernel_add_contrast<<<dimGrid, dimBlock>>>(source, result, height, width, (int) value);
+    kernel_add_contrast<<<dimGrid, dimBlock>>>(image, height, width, (int) value);
 }
 
-void add_saturation(crgb_image_t source, rgb_image_t result, int height, int width, float value) {
+void add_saturation(rgb_image_t image, int height, int width, float value) {
     // contrast modifier value range [-1, 1]
     const dim3 dimGrid((int) ceil(width / 16.0), (int) ceil(height / 16.0));
     const dim3 dimBlock(16, 16);
 
-    kernel_add_saturation<<<dimGrid, dimBlock>>>(source, result, height, width, value);
+    kernel_add_saturation<<<dimGrid, dimBlock>>>(image, height, width, value);
 }

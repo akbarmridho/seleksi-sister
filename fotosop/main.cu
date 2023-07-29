@@ -19,7 +19,7 @@ inline bool ends_with(std::string const &value, std::string const &ending) {
 }
 
 int main() {
-    cv::Mat main_frame = cv::Mat(540, 1200, CV_8UC3);
+    cv::Mat main_frame = cv::Mat(540, 1250, CV_8UC3);
 
     cv::Mat loaded_image;
     string loaded_path;
@@ -31,6 +31,11 @@ int main() {
     cv::namedWindow(WINDOW_NAME);
     cvui::init(WINDOW_NAME);
 
+    int applied_contrast = 0;
+    float applied_saturation = 0.0;
+
+    int contrast_value = 0.0;
+    float saturation_value = 0.0;
 
     while (true) {
         // Fill background color
@@ -74,18 +79,48 @@ int main() {
             }
         }
 
+        cvui::printf(main_frame, 970, 100, 0.4, 0xffffff, "Contrast");
+        cvui::trackbar(main_frame, 970, 125, 250, &contrast_value, -255, 255, 1, "%.1Lf", cvui::TRACKBAR_DISCRETE);
+
+        cvui::printf(main_frame, 970, 180, 0.4, 0xffffff, "Saturation");
+        cvui::trackbar(main_frame, 970, 205, 250, &saturation_value, (float) -1.0, (float) 1.0);
+
+
         // TODO or applied filter is different
-        if (result.empty()) {
+        if (!loaded_image.empty() && (
+                result.empty() ||
+                applied_contrast != contrast_value ||
+                applied_saturation != saturation_value
+        )) {
             rgb_image_t rgb_image;
             int height, width;
             auto total_pixels = load_image(&rgb_image, loaded_image, &height, &width);
 
-            // apply filters
+            // host - cpu
+            // device - gpu
+            // rgb image in cuda memory
+            rgb_image_t d_rgb_image;
+            cudaMalloc(&d_rgb_image, sizeof(uint8_t) * total_pixels * CHANNELS);
+            cudaMemcpy(d_rgb_image, rgb_image, sizeof(uint8_t) * total_pixels * CHANNELS, cudaMemcpyHostToDevice);
+
+            if (contrast_value != 0) {
+                add_contrast(d_rgb_image, height, width, contrast_value);
+            }
+
+            if (saturation_value != 0.0) {
+                add_saturation(d_rgb_image, height, width, saturation_value);
+            }
+
+            cudaMemcpy(rgb_image, d_rgb_image, sizeof(uint8_t) * total_pixels * CHANNELS, cudaMemcpyDeviceToHost);
 
             result = cv::Mat(height, width, CV_8UC3);
             std::memcpy(result.data, rgb_image, total_pixels * sizeof(uint8_t) * CHANNELS);
             free(rgb_image);
+            cudaFree(d_rgb_image);
+
             has_resized_result = false;
+            applied_saturation = saturation_value;
+            applied_contrast = contrast_value;
         }
 
         if (result.empty()) {
@@ -108,35 +143,6 @@ int main() {
             break;
         }
     }
-
-//    // host - cpu
-//    // device - gpu
-//
-//    rgb_image_t h_rgb, d_rgb;
-//    gray_image_t h_res, d_res;
-//    int height, width;
-//
-//    // load h_rgb
-//    auto total_pixels = load_image(&h_rgb, input_file, &height, &width);
-//    // copy h_rgb to d_rgb
-//    cudaMalloc(&d_rgb, sizeof(uint8_t) * total_pixels * CHANNELS);
-//    cudaMemcpy(d_rgb, h_rgb, sizeof(uint8_t) * total_pixels * CHANNELS, cudaMemcpyHostToDevice);
-//
-//    // allocate d_res
-//    cudaMalloc(&d_res, sizeof(uint8_t) * total_pixels);
-//    cudaMemset(d_res, 0, sizeof(uint8_t) * total_pixels);
-//
-//    // convert
-//    to_grey(d_rgb, d_res, height, width);
-//
-//    // copy result device to host
-//    h_res = (uint8_t *) malloc(sizeof(uint8_t) * total_pixels);
-//    cudaMemcpy(h_res, d_res, sizeof(uint8_t) * total_pixels, cudaMemcpyDeviceToHost);
-//
-//    cudaFree(d_res);
-//    cudaFree(d_rgb);
-//
-//    save_image(output_file, h_res, height, width, CV_8UC1);
 
     return 0;
 }
