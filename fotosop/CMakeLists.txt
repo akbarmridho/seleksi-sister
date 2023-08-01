@@ -25,6 +25,7 @@ add_executable(fotosop
         src/converter.cu
         src/loader.cpp
         src/blur.cu
+        src/sobel.cu
         main.cu
         )
 

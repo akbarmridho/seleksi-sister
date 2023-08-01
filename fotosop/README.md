@@ -39,6 +39,7 @@ This project was developed and compiled the following environment:
 - Saturation slider, to modify image saturation
 - Grayscale, edge, and blur checkbox, to apply corresponding filter to the image.
 - Blur, to blur the image using gaussian blur with radius 5
+- Edge detection, to detect image edge
 
 ## Algorithm
 
@@ -49,6 +50,7 @@ Every algorithm below was implemented in parallel with CUDA.
 - Saturation -> convert RGB to HSL, then multiply saturation value by `1 + s` where s is the saturation additional
   value, then convert it back to RGB.
 - Blur -> use gaussian blur with radius 5 and sigma 2.
+- Edge detection -> use sobel operator with horizontal and vertical filter
 
 ## Specification and Bonus Checkbox
 
@@ -64,7 +66,7 @@ Every algorithm below was implemented in parallel with CUDA.
 - [x] Real-time preview edit (2 points)
 - [ ] Image from feed camera (2 points)
 - [x] Blur with GPU (8 points)
-- [ ] Edge detection with GPU (15 points)
+- [x] Edge detection with GPU (15 points)
 
 ## Libraries
 

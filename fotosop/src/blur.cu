@@ -8,8 +8,8 @@ __global__ void kernel_apply_filter(const uint8_t *input,
                                     int width,
                                     const float *filter,
                                     const int filter_width) {
-    int x = blockIdx.x * blockDim.x + threadIdx.x;
-    int y = blockIdx.y * blockDim.y + threadIdx.y;
+    int x = threadIdx.x + blockIdx.x * blockDim.x;
+    int y = threadIdx.y + blockIdx.y * blockDim.y;
 
     if (x >= width || y >= height) {
         return;
