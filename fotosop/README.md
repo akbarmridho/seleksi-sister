@@ -41,6 +41,36 @@ This project was developed and compiled the following environment:
 - Blur, to blur the image using gaussian blur with radius 5
 - Edge detection, to detect image edge
 
+## Image Example
+
+### Menu
+
+![Menu](readme/menu.png)
+
+### Menu Loaded
+
+![Menu](readme/menu-loaded.png)
+
+### Contrast
+
+![Menu](readme/contrast.png)
+
+### Saturation
+
+![Menu](readme/saturation.png)
+
+### Grayscale
+
+![Menu](readme/grayscale.png)
+
+### Edge
+
+![Menu](readme/edge.png)
+
+### Blur
+
+![Menu](readme/blur.png)
+
 ## Algorithm
 
 Every algorithm below was implemented in parallel with CUDA.
