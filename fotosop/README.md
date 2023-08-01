@@ -38,6 +38,7 @@ This project was developed and compiled the following environment:
 - Contrast slider, to modify contrast value
 - Saturation slider, to modify image saturation
 - Grayscale, edge, and blur checkbox, to apply corresponding filter to the image.
+- Blur, to blur the image using gaussian blur with radius 5
 
 ## Algorithm
 
@@ -47,6 +48,7 @@ Every algorithm below was implemented in parallel with CUDA.
 - Contrast -> set RGB value based on `max(0, min(255, c * (v - 128) + 128))` formula where c is the contrast value.
 - Saturation -> convert RGB to HSL, then multiply saturation value by `1 + s` where s is the saturation additional
   value, then convert it back to RGB.
+- Blur -> use gaussian blur with radius 5 and sigma 2.
 
 ## Specification and Bonus Checkbox
 
@@ -61,7 +63,7 @@ Every algorithm below was implemented in parallel with CUDA.
 - [x] Parallelize base filtering algorithm with CUDA (3 points)
 - [x] Real-time preview edit (2 points)
 - [ ] Image from feed camera (2 points)
-- [ ] Blur with GPU (8 points)
+- [x] Blur with GPU (8 points)
 - [ ] Edge detection with GPU (15 points)
 
 ## Libraries

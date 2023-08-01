@@ -1,6 +1,7 @@
 #include <iostream>
 #include "src/loader.h"
 #include "src/converter.cuh"
+#include "src/blur.cuh"
 
 #define CVUI_IMPLEMENTATION
 #define WINDOW_NAME "Fotosop"
@@ -140,6 +141,8 @@ int main() {
 
             if (current_filter == GRAYSCALE) {
                 to_grey(d_rgb_image, height, width);
+            } else if (current_filter == BLUR) {
+                gaussian_blur(d_rgb_image, height, width);
             }
 
             cudaMemcpy(rgb_image, d_rgb_image, sizeof(uint8_t) * total_pixels * CHANNELS, cudaMemcpyDeviceToHost);

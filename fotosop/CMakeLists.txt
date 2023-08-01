@@ -24,6 +24,7 @@ add_executable(fotosop
         lib/osdialog.c
         src/converter.cu
         src/loader.cpp
+        src/blur.cu
         main.cu
         )
 
