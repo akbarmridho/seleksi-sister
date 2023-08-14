@@ -55,7 +55,8 @@ export interface Route {
 }
 
 export enum ContentType {
-  text = 'text/plain'
+  text = 'text/plain',
+  json = 'application/json'
 }
 
 export const ContentTypeHeader = 'Content-Type'
