@@ -36,7 +36,7 @@ function parseHttpHeader (raw: string): HTTPHeaders {
     }
 
     const value = line.slice(offset + 1)
-    const key = line.slice(0, offset)
+    const key = line.slice(0, offset).toLowerCase()
     headers.set(key, value)
   })
 
