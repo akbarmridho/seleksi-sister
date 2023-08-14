@@ -1,5 +1,5 @@
 import { type Socket } from 'net'
-import { type HTTPHeaders, HTTPStatus, type StatusCode } from './types'
+import { type HTTPHeaders, HTTPStatus, type StatusCode, ContentTypeHeader, ContentType } from './types'
 import { ResponseAlreadySent } from './exception'
 
 export class Response {
@@ -39,5 +39,21 @@ export class Response {
 
     this.socket.write(buffer, encoding)
     this.sent = true
+    this.socket.end()
+  }
+
+  public sendEmpty () {
+    if (this.sent) {
+      throw new ResponseAlreadySent()
+    }
+
+    this.sendHeaders()
+    this.sent = true
+    this.socket.end()
+  }
+
+  public sendText (body: string) {
+    this.headers.set(ContentTypeHeader, ContentType.text)
+    this.send(Buffer.from(body, 'utf-8'), 'utf-8')
   }
 }

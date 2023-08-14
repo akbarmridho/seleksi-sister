@@ -53,3 +53,9 @@ export interface Route {
   endpoint: string
   handler: RequestHandler
 }
+
+export enum ContentType {
+  text = 'text/plain'
+}
+
+export const ContentTypeHeader = 'Content-Type'
