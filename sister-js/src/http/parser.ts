@@ -3,7 +3,7 @@ import { Request } from './request'
 import { type HTTPHeaders, HTTPMethod, type QueryParam } from './types'
 
 export function parseHttpRequest (request: Buffer): Request {
-  const stringRep = request.toString('utf-8').split('\r\n\r\n')
+  const stringRep = request.toString('binary').split('\r\n\r\n')
 
   if (stringRep.length !== 2) {
     throw new ParseError('Invalid http request format')
@@ -21,7 +21,7 @@ export function parseHttpRequest (request: Buffer): Request {
 
   const httpHeader = parseHttpHeader(headers)
 
-  const body = Buffer.from(stringRep[1], 'utf-8')
+  const body = Buffer.from(stringRep[1], 'binary')
 
   return new Request(httpMethod as HTTPMethod, base, query, httpHeader, body)
 }
@@ -58,4 +58,17 @@ function parseQuery (raw: string): {
     base: splitted[0],
     query
   }
+}
+
+export function parseUrlEncode (raw: string): any {
+  const result: any = {}
+
+  const params = raw.split('&')
+
+  for (const param of params) {
+    const [key, value] = param.split('=')
+    result[key] = value
+  }
+
+  return result
 }

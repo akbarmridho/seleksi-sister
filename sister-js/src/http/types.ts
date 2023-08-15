@@ -56,7 +56,8 @@ export interface Route {
 
 export enum ContentType {
   text = 'text/plain',
-  json = 'application/json'
+  json = 'application/json',
+  urlEncoded = 'application/x-www-form-urlencoded'
 }
 
 export const ContentTypeHeader = 'Content-Type'

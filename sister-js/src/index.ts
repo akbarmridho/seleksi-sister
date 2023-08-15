@@ -5,6 +5,7 @@ import { helloWorld } from './controller/hello'
 import { notFoundHandler } from './middleware/not-found'
 import { errorHandler } from './middleware/internal-error'
 import { logger } from './middleware/request-logger'
+import { badRequestHandler } from './middleware/bad-request'
 
 async function startServer () {
   const PORT = 3000
@@ -15,6 +16,7 @@ async function startServer () {
 
   server.get('/', helloWorld)
 
+  server.useErrorMiddleware(badRequestHandler)
   server.useErrorMiddleware(notFoundHandler)
   server.useErrorMiddleware(errorHandler)
 
