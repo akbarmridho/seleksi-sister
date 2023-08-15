@@ -20,7 +20,7 @@ export class Http {
 
   public serve (port: number) {
     this.server.listen(port, () => {
-      console.log(`Server opened on port ${port}`)
+      console.log(`Server opened on  http://localhost:${port}`)
     })
   }
 
@@ -30,23 +30,23 @@ export class Http {
       const response = new Response(HTTPStatus.OK, socket);
 
       (async () => {
-        let isNext = false
+        let nextCalled: boolean = true
 
         for (const handler of this.middlewarePipeline) {
+          nextCalled = false
+
           const next = () => {
-            isNext = true
+            nextCalled = true
           }
 
           await handler(request, response, next)
 
-          if (!isNext) {
+          if (!nextCalled) {
             break
-          } else {
-            isNext = false
           }
         }
 
-        if (!isNext) {
+        if (!nextCalled) {
           return
         }
 
@@ -62,23 +62,23 @@ export class Http {
         }
       })().catch(e => {
         if (e instanceof Error) {
-          let isNext = false
+          let nextCalled = true
 
           for (const handler of this.errorPipeline) {
+            nextCalled = false
+
             const next = () => {
-              isNext = true
+              nextCalled = true
             }
 
             handler(request, response, next, e)
 
-            if (!isNext) {
+            if (!nextCalled) {
               break
-            } else {
-              isNext = false
             }
           }
 
-          if (!isNext) {
+          if (!nextCalled) {
             throw e
           }
         } else {

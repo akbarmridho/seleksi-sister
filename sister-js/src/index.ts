@@ -1,13 +1,19 @@
 import { availableParallelism } from 'os'
-import { errorHandler } from './http/handler/internal-error'
-import { notFoundHandler } from './http/handler/not-found'
 import { Http } from './http/server'
 import cluster from 'cluster'
+import { helloWorld } from './controller/hello'
+import { notFoundHandler } from './middleware/not-found'
+import { errorHandler } from './middleware/internal-error'
+import { logger } from './middleware/request-logger'
 
 async function startServer () {
   const PORT = 3000
 
   const server = new Http()
+
+  server.useMiddleware(logger)
+
+  server.get('/', helloWorld)
 
   server.useErrorMiddleware(notFoundHandler)
   server.useErrorMiddleware(errorHandler)
@@ -15,13 +21,17 @@ async function startServer () {
   server.serve(PORT)
 }
 
+const MAX_WORKER = 1
+
 const availableCpu = availableParallelism()
+console.log(`Available CPU: ${availableCpu}, MAX: ${MAX_WORKER}`)
 
 if (cluster.isPrimary) {
   console.log(`Primary ${process.pid} is running`)
+  const workerNumber = MAX_WORKER < availableCpu ? MAX_WORKER : availableCpu
 
   // Fork workers.
-  for (let i = 0; i < availableCpu; i++) {
+  for (let i = 0; i < workerNumber; i++) {
     cluster.fork()
   }
 

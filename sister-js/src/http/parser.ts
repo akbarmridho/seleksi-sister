@@ -3,41 +3,35 @@ import { Request } from './request'
 import { type HTTPHeaders, HTTPMethod, type QueryParam } from './types'
 
 export function parseHttpRequest (request: Buffer): Request {
-  const stringRep = request.toString('utf-8').split('\r\n')
+  const stringRep = request.toString('utf-8').split('\r\n\r\n')
 
-  if (stringRep.length !== 3) {
+  if (stringRep.length !== 2) {
     throw new ParseError('Invalid http request format')
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [httpMethod, uri, ...rest] = stringRep[0].split(' ')
+  const [head, ...headers] = stringRep[0].split('\r\n')
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [httpMethod, uri, ...rest] = head.split(' ')
   const { base, query } = parseQuery(uri)
 
   if (!Object.values(HTTPMethod).includes(httpMethod as HTTPMethod)) {
     throw new ParseError('Invalid http request method')
   }
 
-  const httpHeader = parseHttpHeader(stringRep[1])
+  const httpHeader = parseHttpHeader(headers)
 
-  const body = Buffer.from(stringRep[2], 'utf-8')
+  const body = Buffer.from(stringRep[1], 'utf-8')
 
   return new Request(httpMethod as HTTPMethod, base, query, httpHeader, body)
 }
 
-function parseHttpHeader (raw: string): HTTPHeaders {
+function parseHttpHeader (raw: string[]): HTTPHeaders {
   const headers: HTTPHeaders = new Map<string, string>()
 
-  raw.split('\n').forEach(line => {
-    const offset = line.indexOf(':')
-
-    if (offset === -1) {
-      throw new ParseError('Invalid http header format')
-    }
-
-    const value = line.slice(offset + 1)
-    const key = line.slice(0, offset).toLowerCase()
-    headers.set(key, value)
+  raw.forEach(line => {
+    const [key, ...rest] = line.split(':')
+    headers.set(key.toLowerCase(), rest.join(':').trim())
   })
 
   return headers

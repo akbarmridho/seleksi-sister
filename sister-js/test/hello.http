@@ -1,0 +1,9 @@
+GET http://localhost:3000/?anjay=satu&dua=tiga
+Accept: application/json
+
+###
+
+GET http://localhost:3000/?anjay=satu&dua=tiga
+Accept: text/plain
+
+###
