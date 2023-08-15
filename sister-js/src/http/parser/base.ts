@@ -1,6 +1,6 @@
-import { ParseError } from './exception'
-import { Request } from './request'
-import { type HTTPHeaders, HTTPMethod, type QueryParam } from './types'
+import { ParseError } from '../exception'
+import { Request } from '../request'
+import { type HTTPHeaders, HTTPMethod, type QueryParam } from '../types'
 
 export function parseHttpRequest (request: Buffer): Request {
   const stringRep = request.toString('binary').split('\r\n\r\n')

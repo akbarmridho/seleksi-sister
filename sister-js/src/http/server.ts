@@ -1,6 +1,6 @@
 import { type Server, type Socket, createServer } from 'net'
 import { type Route, type MiddlewareHandler, type ErrorHandler, HTTPStatus, type RequestHandler, HTTPMethod } from './types'
-import { parseHttpRequest } from './parser'
+import { parseHttpRequest } from './parser/base'
 import { Response } from './response'
 import { HandlerNotFound } from './exception'
 

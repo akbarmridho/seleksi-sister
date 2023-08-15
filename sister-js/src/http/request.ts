@@ -1,7 +1,8 @@
 import { type QueryParam, type HTTPHeaders, type HTTPMethod, ContentType } from './types'
 import { RequestError } from './exception'
 import { parseJson } from '../json/parser'
-import { parseUrlEncode } from './parser'
+import { parseUrlEncode } from './parser/base'
+import { type FormValue, parseMultipart } from './parser/multipart'
 
 export class Request {
   public constructor (public readonly method: HTTPMethod, public readonly uri: string, public readonly query: QueryParam, public readonly headers: HTTPHeaders, readonly body: Buffer) {
@@ -47,5 +48,16 @@ export class Request {
     }
 
     throw new RequestError('Content type is not url encoded')
+  }
+
+  public formMultipart (): FormValue[] {
+    const contentType = this.getContentType()
+
+    if (contentType.startsWith(ContentType.formData)) {
+      const boundary = contentType.split(';')[1].split('=')[1].slice(1, -1)
+      return parseMultipart(boundary, this.body)
+    }
+
+    throw new RequestError('Content type is not multipart form data')
   }
 }
