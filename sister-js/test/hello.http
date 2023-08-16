@@ -7,3 +7,8 @@ GET http://localhost:3000/?anjay=satu&dua=tiga
 Accept: text/plain
 
 ###
+
+GET http://localhost:3000/asdasd
+Accept: text/plain
+
+###

@@ -1,5 +1,13 @@
 import { type Server, type Socket, createServer } from 'net'
-import { type Route, type MiddlewareHandler, type ErrorHandler, HTTPStatus, type RequestHandler, HTTPMethod } from './types'
+import {
+  type Route,
+  type MiddlewareHandler,
+  type ErrorHandler,
+  HTTPStatus,
+  type RequestHandler,
+  HTTPMethod,
+  ContentType
+} from './types'
 import { parseHttpRequest } from './parser/base'
 import { Response } from './response'
 import { HandlerNotFound } from './exception'
@@ -9,11 +17,15 @@ export class Http {
   private readonly middlewarePipeline: MiddlewareHandler[]
   private readonly requestPileline: Route[]
   private readonly errorPipeline: ErrorHandler[]
+  private currentBuffer: Buffer[]
+  private waitingForPacket: boolean
 
   public constructor () {
     this.middlewarePipeline = []
     this.requestPileline = []
     this.errorPipeline = []
+    this.currentBuffer = []
+    this.waitingForPacket = false
 
     this.server = createServer(this.requestHandler.bind(this))
   }
@@ -26,65 +38,86 @@ export class Http {
 
   private requestHandler (socket: Socket) {
     socket.on('data', (data: Buffer) => {
-      const request = parseHttpRequest(data)
-      const response = new Response(HTTPStatus.OK, socket);
+      const strep = data.toString('binary')
 
-      (async () => {
-        let nextCalled: boolean = true
+      if (this.waitingForPacket && strep.endsWith('--\r\n')) {
+        this.currentBuffer.push(data)
+        const combined = Buffer.concat(this.currentBuffer)
+        this.currentBuffer = []
+        this.waitingForPacket = false
+        void this.handleData(combined, socket)
+      } else if (this.waitingForPacket) {
+        this.currentBuffer.push(data)
+      } else if (strep.includes(ContentType.formData)) {
+        this.currentBuffer.push(data)
+        this.waitingForPacket = true
+      } else if (strep.endsWith('--')) {
+        this.currentBuffer.push(data)
+      } else {
+        void this.handleData(data, socket)
+      }
+    })
+  }
 
-        for (const handler of this.middlewarePipeline) {
+  private async handleData (data: Buffer, socket: Socket) {
+    const request = parseHttpRequest(data)
+    const response = new Response(HTTPStatus.OK, socket);
+
+    (async () => {
+      let nextCalled: boolean = true
+
+      for (const handler of this.middlewarePipeline) {
+        nextCalled = false
+
+        const next = () => {
+          nextCalled = true
+        }
+
+        await handler(request, response, next)
+
+        if (!nextCalled) {
+          break
+        }
+      }
+
+      if (!nextCalled) {
+        return
+      }
+
+      const selectedHandler = this.requestPileline.find(hand => (
+        hand.endpoint === request.uri &&
+           hand.method === request.method
+      ))
+
+      if (selectedHandler !== undefined) {
+        await selectedHandler.handler(request, response)
+      } else {
+        throw new HandlerNotFound(`Route ${request.method} ${request.uri} does not have corresponding handler`)
+      }
+    })().catch(e => {
+      if (e instanceof Error) {
+        let nextCalled = true
+
+        for (const handler of this.errorPipeline) {
           nextCalled = false
 
           const next = () => {
             nextCalled = true
           }
 
-          await handler(request, response, next)
+          handler(request, response, next, e)
 
           if (!nextCalled) {
             break
           }
         }
 
-        if (!nextCalled) {
-          return
-        }
-
-        const selectedHandler = this.requestPileline.find(hand => (
-          hand.endpoint === request.uri &&
-          hand.method === request.method
-        ))
-
-        if (selectedHandler !== undefined) {
-          await selectedHandler.handler(request, response)
-        } else {
-          throw new HandlerNotFound(`Route ${request.method} ${request.uri} does not have corresponding handler`)
-        }
-      })().catch(e => {
-        if (e instanceof Error) {
-          let nextCalled = true
-
-          for (const handler of this.errorPipeline) {
-            nextCalled = false
-
-            const next = () => {
-              nextCalled = true
-            }
-
-            handler(request, response, next, e)
-
-            if (!nextCalled) {
-              break
-            }
-          }
-
-          if (!nextCalled) {
-            throw e
-          }
-        } else {
+        if (nextCalled) {
           throw e
         }
-      })
+      } else {
+        throw e
+      }
     })
   }
 

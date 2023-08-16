@@ -58,7 +58,8 @@ export enum ContentType {
   text = 'text/plain',
   json = 'application/json',
   urlEncoded = 'application/x-www-form-urlencoded',
-  formData = 'multipart/form-data'
+  formData = 'multipart/form-data',
+  png = 'image/png'
 }
 
 export const ContentTypeHeader = 'Content-Type'

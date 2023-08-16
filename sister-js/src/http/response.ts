@@ -19,6 +19,11 @@ export class Response {
     return this
   }
 
+  public addHeader (key: string, value: string) {
+    this.headers.set(key, value)
+    return this
+  }
+
   private sendHeaders () {
     this.socket.write(`${this.httpVersion} ${this.code.code} ${this.code.status}\r\n`)
 
@@ -38,9 +43,10 @@ export class Response {
 
     this.sendHeaders()
 
-    this.socket.write(buffer, encoding)
+    this.socket.write(buffer, encoding, () => {
+      this.socket.end()
+    })
     this.sent = true
-    this.socket.end()
   }
 
   public sendEmpty () {

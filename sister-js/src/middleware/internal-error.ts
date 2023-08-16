@@ -3,7 +3,7 @@ import { type Request } from '../http/request'
 import { type Response } from '../http/response'
 
 export const errorHandler: ErrorHandler = (request: Request, response: Response, next: Next, error: Error) => {
-  response.status(HTTPStatus.NOT_FOUND)
+  response.status(HTTPStatus.INTERNAL_SERVER_ERROR)
 
   if (process.env.NODE_ENV === 'production') {
     response.sendEmpty()

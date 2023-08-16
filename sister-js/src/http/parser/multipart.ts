@@ -8,11 +8,11 @@ export interface FormValue {
 }
 
 export const parseMultipart = (boundary: string, buffer: Buffer) => {
-  const bufferStr = buffer.toString('binary').split(`--${boundary}`)
+  const bufferStr = buffer.toString('binary').trim().split(`--${boundary}`).map(e => e.trim())
   const result: FormValue[] = []
 
   bufferStr.forEach(each => {
-    if (each !== '--') {
+    if (each !== '--' && each.length !== 0) {
       const [headers, data] = each.split('\r\n\r\n')
       let contentType: string = ContentType.text
       let filename: string | undefined
@@ -21,7 +21,7 @@ export const parseMultipart = (boundary: string, buffer: Buffer) => {
       let rawHeaders: string[] = []
 
       headers.split('\r\n').forEach(each => {
-        rawHeaders = [...rawHeaders, ...each.split(';')]
+        rawHeaders = [...rawHeaders, ...each.split(';').map(e => e.trim())]
       })
 
       rawHeaders.forEach(raw => {

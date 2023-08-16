@@ -1,0 +1,33 @@
+### Get all todo
+GET http://localhost:3000/todo
+Accept: application/json
+
+### Add Todo
+POST http://localhost:3000/todo
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="title"
+Content-Type: text/plain
+
+Anjay
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="roxy.png"
+Content-Type: image/png
+
+< ./roxy.png
+--WebAppBoundary--
+
+### Set complete
+PUT http://localhost:3000/todo
+Content-Type: application/json
+
+{
+  "id": 1
+}
+
+### Delete todo
+DELETE http://localhost:3000/todo
+Content-Type: application/x-www-form-urlencoded
+
+id=1

@@ -3,13 +3,9 @@ import { Request } from '../request'
 import { type HTTPHeaders, HTTPMethod, type QueryParam } from '../types'
 
 export function parseHttpRequest (request: Buffer): Request {
-  const stringRep = request.toString('binary').split('\r\n\r\n')
+  const [baseHeaders, ...bodyRequest] = request.toString('binary').split('\r\n\r\n')
 
-  if (stringRep.length !== 2) {
-    throw new ParseError('Invalid http request format')
-  }
-
-  const [head, ...headers] = stringRep[0].split('\r\n')
+  const [head, ...headers] = baseHeaders.split('\r\n')
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [httpMethod, uri, ...rest] = head.split(' ')
@@ -21,7 +17,7 @@ export function parseHttpRequest (request: Buffer): Request {
 
   const httpHeader = parseHttpHeader(headers)
 
-  const body = Buffer.from(stringRep[1], 'binary')
+  const body = Buffer.from(bodyRequest.join('\r\n\r\n'), 'binary')
 
   return new Request(httpMethod as HTTPMethod, base, query, httpHeader, body)
 }
