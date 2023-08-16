@@ -42,7 +42,7 @@ async function startServer () {
   server.serve(PORT)
 }
 
-const MAX_WORKER = 1
+const MAX_WORKER = 2
 
 const availableCpu = availableParallelism()
 console.log(`Available CPU: ${availableCpu}, MAX: ${MAX_WORKER}`)
